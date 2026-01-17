@@ -3,45 +3,62 @@
 ![Go Version](https://img.shields.io/badge/Go-1.21-00ADD8?style=flat&logo=go)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Size](https://img.shields.io/badge/Image_Size-~15MB-orange)
+![Status](https://img.shields.io/badge/Status-Stable-success)
 
-> **Simple. Self-Hosted. Secure.**
+> **"Your Money. Your Server. Your Rules."**
 
-**Kasi** is a lightweight, open-source expense tracking solution designed for individuals, freelancers, and families who value data privacy. Unlike traditional finance apps, Kasi is designed to be **Self-Hosted**, meaning your financial data stays on your server, 100% under your control.
+**Kasi** is a lightweight, self-hosted expense tracking solution built for individuals, freelancers, and families who prioritize data privacy. Unlike traditional finance apps that store your data on third-party clouds, Kasi allows you to host your own financial data securely.
+
+It is built with **Go (Golang)** and **SQLite**, ensuring it runs efficiently on low-resource hardware like a 512MB VPS, Raspberry Pi, or your local laptop.
+
+🌐 **Official Website & Managed Services:** [www.amilakothalawala.work](https://www.amilakothalawala.work)
 
 ---
 
 ## 📸 Screenshots
 
-| Dashboard (Mobile) | Reports (Desktop) |
+| Mobile Dashboard (PWA) | Desktop Report View |
 |:---:|:---:|
-| ![Dashboard](https://via.placeholder.com/300x600?text=Upload+Mobile+Screenshot) | ![Report](https://via.placeholder.com/600x400?text=Upload+Desktop+Screenshot) |
-*(Upload screenshots to your repo and replace links above)*
+| ![Dashboard](https://via.placeholder.com/300x600?text=Mobile+View) | ![Report](https://via.placeholder.com/600x400?text=Desktop+Report) |
+*(Note: Upload your screenshots to the repo and update these links)*
 
 ---
 
-## 🚀 Key Features
+## ✨ Why Choose Kasi?
 
-- **🔒 Privacy-First:** No tracking, no ads. Your data belongs to you.
-- **📱 PWA Ready:** Install on **Android & iOS** as a native app (No App Store needed).
-- **🚀 Ultra-Lightweight:** Built with **Go & SQLite**. Runs on <20MB RAM.
-- **🌍 Global:** Multi-currency support (USD, EUR, LKR, GBP, etc.) & Multi-language.
-- **👥 Multi-User:** Create accounts for family members or project partners.
-- **📊 Reporting:** Generate clean, printable PDF reports.
-- **💾 Backup & Restore:** Built-in tools to safeguard your data.
+Most finance apps sell your data or require monthly subscriptions. **Kasi** is different:
+
+- **🔒 100% Privacy:** Your data never leaves your server.
+- **📱 PWA Native Experience:** Install on **iOS & Android** directly from the browser (No App Store required).
+- **⚡ Ultra-Lightweight:** Docker image is small (~15MB) and uses minimal RAM (<20MB).
+- **🌍 Global Support:** Supports **Multi-Currency** (USD, EUR, LKR, GBP, etc.) & Multi-Language.
+- **📄 Smart Reports:** Generate printable PDF-ready reports for Projects, Weddings, or Monthly Expenses.
+- **👥 Multi-User Support:** Perfect for couples, families, or small project teams.
+- **💾 Auto Backups:** Built-in tools to download your database instantly.
 
 ---
 
-## 🐳 Quick Start (Docker)
+## 🛠️ Tech Stack
 
-Get Kasi running in seconds using Docker.
+Built for performance and simplicity:
+- **Backend:** Go (Golang) 1.21
+- **Database:** SQLite (Embedded, zero-config)
+- **Frontend:** HTML/CSS (Server Side Rendered) + Vanilla JS
+- **Deployment:** Docker & Docker Compose
 
-### 1. Run the Container
+---
+
+## 🚀 Getting Started (Self-Hosted)
+
+You can run Kasi in seconds using Docker.
+
+### Option A: Quick Run (Docker CLI)
+
 ```bash
 docker run -d \
   -p 8080:8080 \
   -v ./kasi-data:/app/data \
-  -e SESSION_SECRET="ChangeThisToSomethingSecret" \
+  -e SESSION_SECRET="ReplaceWithStrongPassword" \
   --name kasi \
   --restart unless-stopped \
   amilakothalawalasolo/kasi:latest

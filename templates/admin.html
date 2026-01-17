@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: #F3F4F6; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        h3 { margin-top: 0; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; width: 100%; margin-bottom: 10px; }
+        button { padding: 10px 15px; cursor: pointer; background: #4F46E5; color: white; border: none; border-radius: 6px; font-weight: bold; }
+        
+        /* Table Styles (Responsive Fix) */
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 500px; /* Prevents squashing */ }
+        td, th { padding: 12px; border-bottom: 1px solid #eee; text-align: left; font-size: 0.9rem; }
+        
+        .error { color: #991B1B; background: #FEE2E2; padding: 10px; border-radius: 6px; margin-bottom: 15px; } 
+        .success { color: #065F46; background: #D1FAE5; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
+        
+        /* Fixed Buttons */
+        .btn-edit { background: #F59E0B; font-size: 0.8rem; padding: 6px 10px; margin-right: 5px; } 
+        .btn-del { background: #EF4444; font-size: 0.8rem; padding: 6px 10px; }
+        .action-cell { white-space: nowrap; } /* Keeps buttons in one line */
+
+        #userEditModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        #userEditModal .card { width: 90%; max-width: 350px; }
+        
+        .backup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .backup-box { background: #F9FAFB; padding: 15px; border-radius: 8px; border: 1px solid #E5E7EB; }
+        .btn-full { width: 100%; }
+        
+        @media (max-width: 600px) { 
+            .backup-grid { grid-template-columns: 1fr; } 
+            body { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin:0;">👑 Admin Panel</h2>
+        <a href="/" style="text-decoration:none; background: #6B7280; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem;">← Back</a>
+    </div>
+
+    {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+    {{if .Success}}<div class="success">{{.Success}}</div>{{end}}
+    
+    <div class="card">
+        <h3>💾 Backup & Restore</h3>
+        <div class="backup-grid">
+            <div class="backup-box">
+                <h4 style="margin-top:0;">Download</h4>
+                <p style="font-size:0.8rem; color:#666;">Save <code>.db</code> file.</p>
+                <a href="/admin/backup" style="text-decoration: none;">
+                    <button class="btn-full" style="background: #10B981;">Download</button>
+                </a>
+            </div>
+            <div class="backup-box">
+                <h4 style="margin-top:0; color:#EF4444;">Restore</h4>
+                <p style="font-size:0.8rem; color:#666;">Overwrites data.</p>
+                <form action="/admin/restore" method="POST" enctype="multipart/form-data" onsubmit="return confirm('WARNING: Replaces all data! Sure?');">
+                    {{$.CSRFField}}
+                    <input type="file" name="backup_file" required style="padding: 5px; background: white;">
+                    <button type="submit" class="btn-full" style="background: #EF4444; margin-top:5px;">Upload</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Create New User</h3>
+        <form action="/admin/create" method="POST">
+            {{.CSRFField}}
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div style="flex:1; min-width: 150px;">
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+                <div style="flex:1; min-width: 150px;">
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
+                <button type="submit" style="width: auto; height: 42px;">Create</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Manage Users</h3>
+        <div class="table-responsive">
+            <table>
+                <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Currency</th>
+                    <th>Action</th>
+                </tr>
+                {{range .UsersList}}
+                <tr>
+                    <td>
+                        {{.Username}}<br>
+                        <span style="font-size:0.75rem; color:#999;">ID: {{.ID}}</span>
+                    </td>
+                    <td>{{if .IsAdmin}}<span style="background:#EEF2FF; color:#4F46E5; padding:2px 6px; border-radius:4px; font-size:0.8rem;">Admin</span>{{else}}<span style="color:#666; font-size:0.8rem;">User</span>{{end}}</td>
+                    <td>{{.Currency}}</td>
+                    <td class="action-cell">
+                        <button class="btn-edit" onclick="openUserEdit({{.ID}}, '{{.Currency}}')">Edit</button>
+                        {{if not .IsAdmin}}
+                        <form action="/admin/delete" method="POST" onsubmit="return confirm('Delete User?');" style="display:inline;">
+                            {{$.CSRFField}}<input type="hidden" name="id" value="{{.ID}}"><button class="btn-del">Del</button>
+                        </form>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </table>
+        </div>
+    </div>
+
+    <div id="userEditModal">
+        <div class="card">
+            <h3 style="margin-top:0;">Edit User</h3>
+            <form action="/admin/edit" method="POST">
+                {{.CSRFField}}
+                <input type="hidden" name="id" id="edit-id">
+                <label style="font-size:0.9rem; font-weight:bold;">Currency Symbol</label>
+                <input type="text" name="currency" id="edit-currency">
+                
+                <label style="font-size:0.9rem; font-weight:bold;">Reset Password</label>
+                <input type="password" name="password" placeholder="New Password (Optional)">
+                
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="submit" style="flex:1;">Save</button>
+                    <button type="button" onclick="document.getElementById('userEditModal').style.display='none'" style="background: #9CA3AF; flex:1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openUserEdit(id, currency) { 
+            document.getElementById('edit-id').value = id; 
+            document.getElementById('edit-currency').value = currency; 
+            document.getElementById('userEditModal').style.display = 'flex'; 
+        }
+    </script>
+</body>
+</html>

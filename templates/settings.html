@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Settings</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Kasi">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/272/272525.png">
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background: #F3F4F6; display: flex; flex-direction: column; min-height: 100vh; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .btn-back { background-color: #6B7280; color: white; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; transition: 0.2s; }
+        h2 { margin: 0; color: #1F2937; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input, select { padding: 12px; width: 100%; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; font-size: 1rem; }
+        button { padding: 12px; background: #4F46E5; color: white; border: none; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; font-size: 1rem; }
+        .btn-del { background: #EF4444; width: auto; padding: 5px 12px; font-size: 0.85rem; height: auto; }
+        .btn-add { width: auto; padding: 10px 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 0.9rem; }
+        .success { color: #065F46; text-align: center; margin-bottom: 15px; background: #D1FAE5; padding: 12px; border-radius: 8px; }
+        .error { color: #991B1B; text-align: center; margin-bottom: 15px; background: #FEE2E2; padding: 12px; border-radius: 8px; }
+        .manage-list { max-height: 250px; overflow-y: auto; border: 1px solid #E5E7EB; border-radius: 8px; padding: 0; margin-bottom: 20px; background: #FAFAFA; }
+        .manage-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #E5E7EB; }
+        .manage-item:last-child { border-bottom: none; }
+        .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn-install { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; border-radius: 10px; border: 1px solid #ddd; cursor: pointer; transition: 0.2s; background: #F9FAFB; text-align: center; }
+        .btn-install:active { transform: scale(0.98); }
+        .btn-install span { font-size: 1.5rem; margin-bottom: 5px; }
+        .btn-install strong { display: block; font-size: 0.9rem; color: #374151; }
+        #iosModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 200; }
+        .ios-content { background: white; padding: 25px; border-radius: 15px; max-width: 320px; text-align: center; }
+        .ios-step { margin: 15px 0; font-size: 0.95rem; color: #444; }
+        footer { text-align: center; padding: 20px; font-size: 0.85rem; color: #6B7280; margin-top: auto; }
+        footer a { color: #4F46E5; font-weight: 600; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="page-header"><a href="/" class="btn-back">← Back</a><h2>⚙️ Settings</h2><div style="width: 60px;"></div></div>
+    {{if .Success}}<div class="success">✅ {{.Success}}</div>{{end}}{{if .Error}}<div class="error">⚠️ {{.Error}}</div>{{end}}
+    <div class="card">
+        <h3 style="margin-top:0;">📱 Get the App</h3>
+        <p style="font-size:0.9rem; color:#666; margin-bottom:15px;">Install Kasi on your phone for the best experience.</p>
+        <div class="install-grid">
+            <div class="btn-install" onclick="installAndroid()" style="border-color: #34D399; background: #ECFDF5;"><span>🤖</span><strong>Install on<br>Android</strong></div>
+            <div class="btn-install" onclick="showIOSGuide()" style="border-color: #60A5FA; background: #EFF6FF;"><span>🍏</span><strong>Install on<br>iPhone</strong></div>
+        </div>
+    </div>
+    <div class="card">
+        <h3 style="margin-top:0;">User Profile</h3>
+        <form action="/settings" method="POST">
+            {{.CSRFField}}
+            <label>Display Name</label><input type="text" name="username" value="{{.User.Username}}" required>
+            <label>Project Name (Global)</label><input type="text" name="project_name" value="{{.User.ProjectName}}" required>
+            <label>Language</label><select name="language"><option value="en" {{if eq .User.Language "en"}}selected{{end}}>English (US)</option><option value="si" {{if eq .User.Language "si"}}selected{{end}}>සිංහල (Sinhala)</option><option value="es" {{if eq .User.Language "es"}}selected{{end}}>Español (Spanish)</option><option value="fr" {{if eq .User.Language "fr"}}selected{{end}}>Français (French)</option><option value="de" {{if eq .User.Language "de"}}selected{{end}}>Deutsch (German)</option><option value="it" {{if eq .User.Language "it"}}selected{{end}}>Italiano (Italian)</option><option value="pt" {{if eq .User.Language "pt"}}selected{{end}}>Português (Portuguese)</option><option value="ru" {{if eq .User.Language "ru"}}selected{{end}}>Русский (Russian)</option><option value="zh" {{if eq .User.Language "zh"}}selected{{end}}>中文 (Chinese)</option><option value="ja" {{if eq .User.Language "ja"}}selected{{end}}>日本語 (Japanese)</option><option value="ar" {{if eq .User.Language "ar"}}selected{{end}}>العربية (Arabic)</option></select>
+            <label>Currency</label><select name="currency"><option value="LKR" {{if eq .User.Currency "LKR"}}selected{{end}}>LKR (රු)</option><option value="$" {{if eq .User.Currency "$"}}selected{{end}}>USD ($)</option><option value="€" {{if eq .User.Currency "€"}}selected{{end}}>EUR (€)</option><option value="£" {{if eq .User.Currency "£"}}selected{{end}}>GBP (£)</option><option value="¥" {{if eq .User.Currency "¥"}}selected{{end}}>JPY (¥)</option><option value="AED" {{if eq .User.Currency "AED"}}selected{{end}}>AED</option><option value="₹" {{if eq .User.Currency "₹"}}selected{{end}}>INR (₹)</option></select>
+            <label>Password (Optional)</label><input type="password" name="password" placeholder="Leave empty to keep current">
+            <button type="submit">Save Changes</button>
+        </form>
+    </div>
+    <div class="card">
+        <h3 style="margin-top:0;">Manage Categories</h3>
+        <div class="manage-list">{{range .Categories}}<div class="manage-item"><span>{{.Name}}</span><form action="/settings/category/delete" method="POST" onsubmit="return confirm('Remove {{.Name}}?');" style="margin:0;">{{$.CSRFField}}<input type="hidden" name="id" value="{{.ID}}"><button class="btn-del">Delete</button></form></div>{{end}}</div>
+        <form action="/settings/category/add" method="POST" style="display: flex; gap: 10px;">{{.CSRFField}}<input type="text" name="name" placeholder="New Category" required style="margin:0;"><button type="submit" class="btn-add">Add +</button></form>
+    </div>
+    <div class="card">
+        <h3 style="margin-top:0;">Manage Units</h3>
+        <div class="manage-list">{{range .Units}}<div class="manage-item"><span>{{.Name}}</span><form action="/settings/unit/delete" method="POST" onsubmit="return confirm('Remove {{.Name}}?');" style="margin:0;">{{$.CSRFField}}<input type="hidden" name="id" value="{{.ID}}"><button class="btn-del">Delete</button></form></div>{{end}}</div>
+        <form action="/settings/unit/add" method="POST" style="display: flex; gap: 10px;">{{.CSRFField}}<input type="text" name="name" placeholder="New Unit" required style="margin:0;"><button type="submit" class="btn-add">Add +</button></form>
+    </div>
+    <div id="iosModal" onclick="this.style.display='none'"><div class="ios-content" onclick="event.stopPropagation()"><h3 style="margin-top:0;">Install on iPhone</h3><div class="ios-step">1. Tap the <strong>Share</strong> button<br><span style="font-size:2rem;">⎋</span></div><div class="ios-step">2. Scroll down & tap<br><strong>"Add to Home Screen"</strong><br><span style="font-size:1.5rem;">➕</span></div><button onclick="document.getElementById('iosModal').style.display='none'" style="background:#6B7280; margin-top:10px;">Got it!</button></div></div>
+    <footer><p>Created by <a href="https://www.amilakothalawala.work" target="_blank">Amila Kothalawala</a> © 2026</p></footer>
+    <script>
+        let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
+        async function installAndroid() { if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; deferredPrompt = null; } else { alert("To install on Android:\n\n1. Tap the browser Menu (3 dots)\n2. Select 'Install App' or 'Add to Home Screen'"); } }
+        function showIOSGuide() { document.getElementById('iosModal').style.display = 'flex'; }
+    </script>
+</body>
+</html>

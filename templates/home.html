@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasi Dashboard</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#4F46E5">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Kasi">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/272/272525.png">
+
+    <style>
+        :root { --primary: #4F46E5; --bg: #F9FAFB; --card: #FFFFFF; --text: #111827; --border: #E5E7EB; }
+        [data-theme="dark"] { --primary: #6366f1; --bg: #111827; --card: #1F2937; --text: #F9FAFB; --border: #374151; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; transition: 0.3s; display: flex; flex-direction: column; min-height: 100vh; }
+        .container { max-width: 900px; margin: 0 auto; padding: 1rem; flex: 1; width: 100%; box-sizing: border-box; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; margin-bottom: 1rem; }
+        .controls { display: flex; gap: 12px; align-items: center;}
+        a { text-decoration: none; }
+        .card { background: var(--card); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border); margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .summary-card { background: linear-gradient(135deg, var(--primary), #818cf8); color: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2); }
+        .summary-card h4 { margin: 0; opacity: 0.9; font-size: 0.9rem; font-weight: normal; }
+        .summary-card div { font-size: 1.5rem; font-weight: bold; margin-top: 5px; }
+        .form-row { display: grid; gap: 10px; }
+        .row-1 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+        .row-2 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; }
+        @media (max-width: 700px) { .row-1, .row-2 { grid-template-columns: 1fr; } }
+        input, select { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); width: 100%; box-sizing: border-box; font-size: 0.95rem; outline: none; }
+        label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: #6B7280; font-weight: 600; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .list-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border); align-items: center; }
+        .item-details { font-size: 0.85rem; color: #6B7280; display: flex; gap: 10px; align-items: center; }
+        .badge { background: #EEF2FF; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .actions { display: flex; gap: 5px; margin-top: 5px; }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; border-radius: 4px; }
+        .btn-edit { background: #F59E0B; } .btn-del { background: #EF4444; }
+        #filterSection { display: none; margin-top: 20px; }
+        .filter-toggle { width: 100%; background: var(--card); color: var(--text); border: 1px solid var(--border); margin-top: 10px; }
+        #editModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { width: 90%; max-width: 350px; background: var(--card); padding: 20px; border-radius: 12px; }
+        footer { text-align: center; padding: 20px; font-size: 0.85rem; color: #6B7280; margin-top: auto; border-top: 1px solid var(--border); }
+        footer a { color: var(--primary); font-weight: 600; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2 class="brand" style="margin:0;">🪙 Kasi</h2>
+            <div class="controls">
+                {{if .User.IsAdmin}}<a href="/admin" style="color: var(--primary); font-weight:bold; font-size:0.9rem;">👑 Admin</a>{{end}}
+                <a href="/settings" style="text-decoration: none; font-size: 1.3rem;" title="Settings">⚙️</a>
+                <button onclick="toggleTheme()" style="padding: 8px 12px; background: transparent; color: var(--text); box-shadow:none;">🌙</button>
+                <a href="/logout" style="color: #EF4444; font-weight: 600; font-size: 0.9rem;">Logout</a>
+            </div>
+        </div>
+        {{if .Success}}<div style="background:#D1FAE5; color:green; padding:10px; border-radius:8px; margin-bottom:10px; text-align:center;">{{.Success}}</div>{{end}}
+        {{if .Error}}<div style="background:#FEE2E2; color:red; padding:10px; border-radius:8px; margin-bottom:10px; text-align:center;">{{.Error}}</div>{{end}}
+        <div class="summary-grid">
+            <div class="summary-card"><h4>{{.User.ProjectName}} (This Month)</h4><div>{{.User.Currency}} {{.MonthCom}}</div></div>
+            <div class="summary-card" style="background: linear-gradient(135deg, #10B981, #34D399);"><h4 data-key="private_title">Private (This Month)</h4><div>{{.User.Currency}} {{.MonthPriv}}</div></div>
+        </div>
+        <div class="card">
+            <form action="/add" method="POST">
+                {{.CSRFField}}
+                <div class="form-row">
+                    <div class="row-1">
+                        <div><label data-key="lbl_item">Item Name</label><input type="text" name="item" required placeholder="..."></div>
+                        <div><label data-key="lbl_cat">Category</label><select name="category" required>{{range .Categories}}<option value="{{.Name}}">{{.Name}}</option>{{end}}</select></div>
+                        <div><label data-key="lbl_qty">Qty / Unit</label><div style="display:flex; gap:5px;"><input type="number" name="quantity" step="0.1" value="1" style="width:50%;"><select name="unit" style="width:50%;">{{range .Units}}<option value="{{.Name}}">{{.Name}}</option>{{end}}</select></div></div>
+                    </div>
+                    <div class="row-2">
+                        <div><label data-key="lbl_amount">Price</label><input type="number" name="amount" step="0.01" required placeholder="0.00"></div>
+                        <div><label data-key="lbl_type">Type</label><select name="type"><option value="private" data-key="private">Private</option><option value="common" data-key="common">Common</option></select></div>
+                        <div><label data-key="lbl_date">Date</label><input type="date" name="date" value="{{.Today}}"></div>
+                        <div style="display: flex; align-items: flex-end;"><button type="submit" data-key="add" style="width: 100%;">Add</button></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div><h3>{{.User.ProjectName}} Expenses</h3><div class="card" style="padding: 0;">{{range .Common}}<div class="list-item"><div><div style="font-weight:600;">{{.Item}}</div><div class="item-details"><span class="badge">{{.Category}}</span><span>{{.Quantity}} {{.Unit}}</span></div><small style="color:#9CA3AF;">{{.Date}} • {{.Username}}</small></div><div style="text-align: right;"><div style="font-weight:bold;">{{$.User.Currency}} {{.Amount}}</div>{{if or (eq $.User.ID .UserID) $.User.IsAdmin}}<div class="actions"><button class="btn-sm btn-edit" onclick="openEdit({{.ID}}, '{{.Item}}', {{.Amount}})">✎</button><form action="/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete?');">{{$.CSRFField}}<input type="hidden" name="id" value="{{.ID}}"><button class="btn-sm btn-del">🗑</button></form></div>{{end}}</div></div>{{end}}</div></div>
+            <div><h3 data-key="private_title" style="margin-top:0; font-size:1.1rem; color: var(--text);">My Private</h3><div class="card" style="padding: 0;">{{range .Private}}<div class="list-item"><div><div style="font-weight:600;">{{.Item}}</div><div class="item-details"><span class="badge">{{.Category}}</span><span>{{.Quantity}} {{.Unit}}</span></div><small style="color:#9CA3AF;">{{.Date}}</small></div><div style="text-align: right;"><div style="font-weight:bold;">{{$.User.Currency}} {{.Amount}}</div><div class="actions"><button class="btn-sm btn-edit" onclick="openEdit({{.ID}}, '{{.Item}}', {{.Amount}})">✎</button><form action="/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete?');">{{$.CSRFField}}<input type="hidden" name="id" value="{{.ID}}"><button class="btn-sm btn-del">🗑</button></form></div></div></div>{{end}}</div></div>
+        </div>
+        <button class="filter-toggle" onclick="toggleFilter()">🔍 Filter by Date</button>
+        <div id="filterSection" class="card" style="margin-top: 10px; padding: 15px;">
+            <form method="GET" action="/" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
+                <span data-key="filter" style="font-weight:bold;">Date Range:</span><input type="date" name="start" value="{{.FilterStart}}"><input type="date" name="end" value="{{.FilterEnd}}"><button type="submit" data-key="search">Search</button><a href="/" style="font-size: 0.9rem; color: var(--primary);" data-key="clear">Clear Filter</a>
+            </form>
+            <a href="/report?start={{.FilterStart}}&end={{.FilterEnd}}" target="_blank" style="display:block; text-align:center; background: #10B981; color: white; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold;">📄 Generate Report (PDF/Print)</a>
+        </div>
+    </div>
+    <div id="editModal"><div class="modal-content"><h3 data-key="edit_title">Edit Expense</h3><form action="/edit" method="POST">{{.CSRFField}}<input type="hidden" name="id" id="edit-id"><label>Item Name</label><input type="text" name="item" id="edit-item" required style="margin-bottom: 15px;"><label>Amount</label><input type="number" name="amount" id="edit-amount" step="0.01" required style="margin-bottom: 15px;"><div style="display: flex; gap: 10px;"><button type="submit" data-key="save" style="flex:1;">Save</button><button type="button" onclick="document.getElementById('editModal').style.display='none'" style="background: #9CA3AF; flex:1;" data-key="cancel">Cancel</button></div></form></div></div>
+    <footer><p>Created by <a href="https://www.amilakothalawala.work" target="_blank">Amila Kothalawala</a> © 2026</p></footer>
+    <script>
+        function toggleFilter() { const section = document.getElementById('filterSection'); section.style.display = section.style.display === 'block' ? 'none' : 'block'; }
+        function toggleTheme() { const body = document.body; if (body.getAttribute('data-theme') === 'dark') { body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); } else { body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); } }
+        if (localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+        const langData = { 'en': {'filter': 'Date Range:', 'search': 'Search', 'clear': 'Clear', 'private': 'Private', 'common': 'Common', 'add': 'Add', 'common_title': 'Family Expenses', 'private_title': 'My Private', 'edit_title': 'Edit Expense', 'save': 'Save', 'cancel': 'Cancel', 'lbl_item': 'Item', 'lbl_amount': 'Price', 'lbl_type': 'Type', 'lbl_date': 'Date', 'lbl_cat': 'Category', 'lbl_qty': 'Qty'}, 'si': {'filter': 'දින පරාසය:', 'search': 'සොයන්න', 'clear': 'මුලට', 'private': 'පුද්ගලික', 'common': 'පොදු', 'add': 'එකතු කරන්න', 'common_title': 'පවුලේ වියදම්', 'private_title': 'මගේ වියදම්', 'edit_title': 'වෙනස් කරන්න', 'save': 'සේව් කරන්න', 'cancel': 'එපා', 'lbl_item': 'වියදම මොකටද?', 'lbl_amount': 'ගාණ', 'lbl_type': 'වර්ගය', 'lbl_date': 'දිනය', 'lbl_cat': 'වර්ගය', 'lbl_qty': 'ප්‍රමාණය'}, 'es': {'filter': 'Rango de fechas:', 'search': 'Buscar', 'clear': 'Limpiar', 'private': 'Privado', 'common': 'Común', 'add': 'Agregar', 'common_title': 'Gastos Familiares', 'private_title': 'Mis Gastos', 'edit_title': 'Editar', 'save': 'Guardar', 'cancel': 'Cancelar', 'lbl_item': 'Artículo', 'lbl_amount': 'Precio', 'lbl_type': 'Tipo', 'lbl_date': 'Fecha', 'lbl_cat': 'Categoría', 'lbl_qty': 'Cant.'} };
+        const userLang = "{{.User.Language}}" || "en";
+        function applyLang() { if (!langData[userLang]) return; document.querySelectorAll('[data-key]').forEach(el => { const key = el.getAttribute('data-key'); if (langData[userLang][key]) el.innerText = langData[userLang][key]; }); if(userLang=='ar') document.body.style.direction = 'rtl'; }
+        applyLang();
+        function openEdit(id, item, amount) { document.getElementById('edit-id').value = id; document.getElementById('edit-item').value = item; document.getElementById('edit-amount').value = amount; document.getElementById('editModal').style.display = 'flex'; }
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Ignore Data Directory (User Data)
+data/
+*.db
+
+# Ignore Compiled Binaries
+kasi
+main
+*.exe
+
+# OS generated files
+.DS_Store
+Thumbs.db

@@ -55,3 +55,22 @@ docker run -d \
   --name kasi \
   --restart unless-stopped \
   amilakothalawalasolo/kasi:latest
+
+
+
+---
+
+## 🛡️ Security & Transparency
+
+Security is a top priority for Kasi. The Docker image is scanned regularly using **Trivy** to ensure safety.
+
+**Latest Scan Results:**
+
+| Component | Status | Vulnerabilities |
+| :--- | :--- | :--- |
+| **Base OS (Alpine Linux)** | ✅ **Clean** | 0 Critical, 0 High, 0 Medium |
+| **Application Logic** | ✅ **Safe** | 0 Critical, 0 High, 1 Medium* |
+
+> *Note: The single "Medium" vulnerability (`CVE-2025-47909`) is an upstream issue in the `gorilla/csrf` library. There is currently no fix available from the maintainers, but it poses minimal risk to self-hosted instances. We are monitoring it closely.*
+
+---

@@ -15,13 +15,6 @@ It is built with **Go (Golang)** and **SQLite**, ensuring it runs efficiently on
 
 ---
 
-## 📸 Screenshots
-
-| Mobile Dashboard (PWA) | Desktop Report View |
-|:---:|:---:|
-| ![Dashboard](https://via.placeholder.com/300x600?text=Mobile+View) | ![Report](https://via.placeholder.com/600x400?text=Desktop+Report) |
-*(Note: Upload your screenshots to the repo and update these links)*
-
 ---
 
 ## ✨ Why Choose Kasi?

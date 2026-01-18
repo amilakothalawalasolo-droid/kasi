@@ -49,18 +49,28 @@ func main() {
 	mux.HandleFunc("/admin", authMiddleware(adminHandler)); mux.HandleFunc("/admin/create", authMiddleware(adminCreateUserHandler)); mux.HandleFunc("/admin/delete", authMiddleware(adminDeleteUserHandler)); mux.HandleFunc("/admin/edit", authMiddleware(adminEditUserHandler))
 	mux.HandleFunc("/admin/backup", authMiddleware(adminBackupHandler)); mux.HandleFunc("/admin/restore", authMiddleware(adminRestoreHandler))
 
-	log.Println("🪙 Kasi v5.0 (Final) started on :8080")
+	log.Println("🪙 Kasi v5.0.1 (Stable) started on :8080")
 	http.ListenAndServe(":8080", csrfMiddleware(mux))
 }
 
 func initDBConnection() { var err error; if db != nil { db.Close() }; db, err = sql.Open("sqlite", "./data/kasi.db"); if err != nil { log.Fatal(err) } }
+
 func initDB() {
 	db.Exec(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT, is_admin BOOLEAN DEFAULT 0, currency TEXT DEFAULT 'LKR', language TEXT DEFAULT 'en', project_name TEXT DEFAULT 'Project Expenses');`)
 	db.Exec(`CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE);`)
 	db.Exec(`CREATE TABLE IF NOT EXISTS units (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE);`)
 	db.Exec(`CREATE TABLE IF NOT EXISTS expenses (id INTEGER PRIMARY KEY AUTOINCREMENT, item TEXT, amount REAL, type TEXT, category TEXT, quantity REAL DEFAULT 1, unit TEXT, user_id INTEGER, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id));`)
-	var count int; db.QueryRow("SELECT COUNT(*) FROM users WHERE username='admin'").Scan(&count)
-	if count == 0 { hash, _ := bcrypt.GenerateFromPassword([]byte("admin123"), 10); db.Exec("INSERT INTO users(username, password, is_admin, currency, language, project_name) VALUES(?, ?, ?, ?, ?, ?)", "admin", string(hash), true, "LKR", "en", "My Project") }
+	
+	// --- FIX START: Check total users count instead of just 'admin' ---
+	var count int
+	db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	if count == 0 { 
+		// Only create default admin if NO users exist at all
+		hash, _ := bcrypt.GenerateFromPassword([]byte("admin123"), 10)
+		db.Exec("INSERT INTO users(username, password, is_admin, currency, language, project_name) VALUES(?, ?, ?, ?, ?, ?)", "admin", string(hash), true, "LKR", "en", "My Project") 
+	}
+	// --- FIX END ---
+
 	db.QueryRow("SELECT COUNT(*) FROM categories").Scan(&count); if count == 0 { db.Exec("INSERT INTO categories (name) VALUES ('Food'), ('Transport'), ('Materials'), ('Labor'), ('Other')") }
 	db.QueryRow("SELECT COUNT(*) FROM units").Scan(&count); if count == 0 { db.Exec("INSERT INTO units (name) VALUES ('Items'), ('kg'), ('L'), ('Day'), ('Feet')") }
 }
@@ -87,7 +97,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 func reportHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "kasi-session"); userID := session.Values["userID"].(int); currentUser := getUser(userID)
 	start := r.URL.Query().Get("start"); end := r.URL.Query().Get("end"); filterQuery := ""; args := []interface{}{}; if start != "" && end != "" { filterQuery = " AND date(created_at) BETWEEN ? AND ?"; args = append(args, start, end) }
-	// FIXED: Uses COALESCE to prevent crash on NULL sum
 	catQuery := "SELECT category, COALESCE(SUM(amount), 0) FROM expenses WHERE type='common'" + filterQuery + " GROUP BY category ORDER BY SUM(amount) DESC"; rows, err := db.Query(catQuery, args...); var summary []ReportItem; var grandTotal float64
 	if err == nil { for rows.Next() { var ri ReportItem; rows.Scan(&ri.Category, &ri.Total); summary = append(summary, ri); grandTotal += ri.Total }; rows.Close() }
 	listQuery := "SELECT e.item, e.amount, e.category, e.date, u.username FROM expenses e JOIN users u ON e.user_id = u.id WHERE e.type='common'" + filterQuery + " ORDER BY e.created_at DESC"; rowsList, errList := db.Query(listQuery, args...); var details []Expense
